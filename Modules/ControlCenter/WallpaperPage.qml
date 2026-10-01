@@ -379,6 +379,23 @@ StyledFlickable {
                         .setDesktopWallpaperBackend(value)
                 }
 
+                SettingsRow {
+                    Layout.fillWidth: true
+                    visible: WallpaperService.plasmaSession
+                    iconName: "sync"
+                    title: qsTr("同步到 Plasma")
+
+                    trailing: StyledSwitch {
+                        checked:
+                            PersonalizationConfig.syncWallpaperToPlasma
+                        Accessible.name:
+                            qsTr("同步到 Plasma")
+                        onToggled:
+                            PersonalizationConfig
+                                .setSyncWallpaperToPlasma(checked)
+                    }
+                }
+
                 InlineStatusBanner {
                     Layout.fillWidth: true
                     visible: AwwwWallpaperService.lastError !== ""

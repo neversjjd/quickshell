@@ -209,6 +209,7 @@ Singleton {
     property var recentWallpaperColors: []
     property string wallpaperFillMode: "Fill"
     property string desktopWallpaperBackend: "quickshell"
+    property bool syncWallpaperToPlasma: false
     property bool autoCycleEnabled: false
     property string autoCycleMode: "interval"
     property int autoCycleInterval: 300
@@ -635,6 +636,10 @@ Singleton {
 
     function setDesktopWallpaperBackend(value) {
         setValue("desktopWallpaperBackend", value === "awww" ? "awww" : "quickshell");
+    }
+
+    function setSyncWallpaperToPlasma(value) {
+        setValue("syncWallpaperToPlasma", !!value);
     }
 
     function setMonitorWallpaper(screenName, value) {
@@ -1385,6 +1390,7 @@ Singleton {
                 "recentColors": root.recentWallpaperColors,
                 "fillMode": root.wallpaperFillMode,
                 "desktopBackend": root.desktopWallpaperBackend,
+                "syncToPlasma": root.syncWallpaperToPlasma,
                 "autoCycle": {
                     "enabled": root.autoCycleEnabled,
                     "mode": root.autoCycleMode,
@@ -1521,6 +1527,7 @@ Singleton {
         root.recentWallpaperColors = normalizedRecentColors(wallpaper.recentColors);
         root.wallpaperFillMode = normalizedOption(root.desktopFillModes, wallpaper.fillMode, "Fill");
         root.desktopWallpaperBackend = wallpaper.desktopBackend === "awww" ? "awww" : "quickshell";
+        root.syncWallpaperToPlasma = !!wallpaper.syncToPlasma;
         root.autoCycleEnabled = !!autoCycle.enabled;
         root.autoCycleMode = autoCycle.mode === "time" ? "time" : "interval";
         root.autoCycleInterval = Math.max(5, Math.round(Number(autoCycle.interval) || 300));

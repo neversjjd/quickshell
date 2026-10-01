@@ -30,6 +30,16 @@ Singleton {
     property bool overviewBackdropRuleProbeComplete: false
 
     readonly property bool busy: scanning || switching
+
+    // 桌面壁纸的「系统侧」——在 Plasma 会话下可以顺带把壁纸同步给 Plasma，
+    // 这样 key shell 停掉之后桌面壁纸不会变回旧的那张。
+    readonly property bool plasmaSession: {
+        const desktop = String(Quickshell.env("XDG_CURRENT_DESKTOP") || "").toLowerCase();
+        return desktop.indexOf("kde") !== -1 || desktop.indexOf("plasma") !== -1;
+    }
+    readonly property string plasmaWallpaperCommand:
+        Quickshell.env("CLAVIS_PLASMA_WALLPAPER_COMMAND")
+            || "plasma-apply-wallpaperimage"
         || ThemeService.generating || AwwwWallpaperService.busy
     readonly property var imageExtensions: ["jpg", "jpeg", "png", "webp", "bmp", "gif"]
     readonly property bool overviewReady: {
@@ -293,6 +303,9 @@ Singleton {
         else
             root.switching = false;
 
+        if (root.isImagePath(path))
+            root.syncDesktopWallpaperToPlasma(path);
+
         return true;
     }
 
@@ -357,6 +370,23 @@ Singleton {
     function setDesktopWallpaperBackend(value) {
         PersonalizationConfig.setDesktopWallpaperBackend(value);
         return true;
+    }
+
+    // 把当前桌面壁纸同步给 Plasma（KDE 会话 + 开关打开时才做）。
+    // 只同步「全局」壁纸：plasma-apply-wallpaperimage 作用于所有桌面，没有按屏粒度。
+    function syncDesktopWallpaperToPlasma(path) {
+        if (!PersonalizationConfig.syncWallpaperToPlasma)
+            return;
+        if (!root.plasmaSession || !root.isImagePath(path))
+            return;
+
+        plasmaWallpaperProcess.command = [root.plasmaWallpaperCommand, path];
+        plasmaWallpaperProcess.running = true;
+    }
+
+    // 打开开关时立刻推一次当前壁纸，避免「开了但没生效」
+    function syncCurrentWallpaperToPlasma() {
+        syncDesktopWallpaperToPlasma(PersonalizationConfig.wallpaperPath);
     }
 
     function setWallpaperTransitionType(value) {
@@ -520,6 +550,10 @@ Singleton {
 
         function onDesktopWallpaperBackendChanged() {
             root.refreshSettingsFromConfig();
+        }
+
+        function onSyncWallpaperToPlasmaChanged() {
+            root.syncCurrentWallpaperToPlasma();
         }
 
         function onWallpaperFillModeChanged() {
@@ -759,6 +793,16 @@ Singleton {
             root.niriTransparentBackgroundDetected =
                 exitCode === 0;
             root.overviewBackdropRuleProbeComplete = true;
+        }
+    }
+
+    // 把壁纸也写到 Plasma（KDE）。命令可被 CLAVIS_PLASMA_WALLPAPER_COMMAND 覆盖，方便测试。
+    Process {
+        id: plasmaWallpaperProcess
+
+        onExited: exitCode => {
+            if (exitCode !== 0)
+                root.lastDesktopError = qsTr("无法把壁纸同步到 Plasma");
         }
     }
 
