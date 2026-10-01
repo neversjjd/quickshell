@@ -15,10 +15,12 @@ PanelWindow {
 
     implicitHeight: surfaceThickness
     color: "transparent"
-    exclusiveZone: exclusiveThickness
-    WlrLayershell.layer: WlrLayer.Top
+    // 不占位：不给合成器留 strut，应用不会被边栏挤开
+    exclusiveZone: 0
+    // 桌面层：待在壁纸之上、普通窗口之下 —— 窗口拖上来会盖住边栏
+    WlrLayershell.layer: WlrLayer.Bottom
     WlrLayershell.namespace: "clavis-shell-bar-horizontal"
-    WlrLayershell.exclusionMode: ExclusionMode.Normal
+    WlrLayershell.exclusionMode: ExclusionMode.Ignore
 
     BarAxis {
         id: axis
