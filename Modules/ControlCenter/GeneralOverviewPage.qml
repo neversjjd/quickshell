@@ -78,6 +78,36 @@ StyledFlickable {
 
         SettingsSection {
             Layout.fillWidth: true
+            title: qsTr("Clavis")
+            iconName: "rocket_launch"
+
+            SettingsRow {
+                Layout.fillWidth: true
+                // niri 会话下开机启动归 Clavis 自己的 systemd 服务管，这里不重复提供
+                visible: !ThemeService.isNiriSession
+                iconName: "rocket_launch"
+                title: qsTr("开机启动")
+                interactive: true
+
+                trailing: StyledSwitch {
+                    checked: ShellService.autostartEnabled
+                    Accessible.name: qsTr("开机启动")
+                    onToggled: ShellService.setAutostartEnabled(checked)
+                }
+            }
+
+            SettingsActionRow {
+                Layout.fillWidth: true
+                iconName: "logout"
+                text: qsTr("关闭 Clavis")
+                trailingIconName: ""
+                onClicked: ShellService.quit()
+            }
+
+        }
+
+        SettingsSection {
+            Layout.fillWidth: true
             title: qsTr("应用")
             iconName: "apps"
 
