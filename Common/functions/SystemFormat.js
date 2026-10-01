@@ -56,7 +56,7 @@ function rootDisk(disks) {
         return ({});
 
     for (let index = 0; index < disks.length; index += 1) {
-        if (String(disks[index].mountPoint || "") === "/")
+        if (mountedAtRoot(disks[index]))
             return disks[index];
     }
     return disks[0] || ({});
@@ -67,10 +67,27 @@ function rootDiskIndex(disks) {
         return 0;
 
     for (let index = 0; index < disks.length; index += 1) {
-        if (String(disks[index].mountPoint || "") === "/")
+        if (mountedAtRoot(disks[index]))
             return index;
     }
     return 0;
+}
+
+// keytop 对「物理磁盘」条目只填复数的 mountPoints / filesystems，
+// 单数 mountPoint / filesystem 是 legacy，恒为空（见 keytop docs/protocol.md）。
+function mountedAtRoot(disk) {
+    if (!disk)
+        return false;
+    if (String(disk.mountPoint || "") === "/")
+        return true;
+    const mountPoints = disk.mountPoints;
+    if (!Array.isArray(mountPoints))
+        return false;
+    for (let index = 0; index < mountPoints.length; index += 1) {
+        if (String(mountPoints[index]) === "/")
+            return true;
+    }
+    return false;
 }
 
 function frequencyMHz(value) {
