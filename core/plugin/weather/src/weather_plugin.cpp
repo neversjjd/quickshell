@@ -8,6 +8,8 @@ WeatherPlugin::WeatherPlugin(QObject *parent)
         emit dataChanged();
     });
     connect(&m_backend, &WeatherBackend::loadingChanged, this, &WeatherPlugin::loadingChanged);
+    connect(&m_backend, &WeatherBackend::locationSearchChanged, this,
+            &WeatherPlugin::locationSearchChanged);
     syncModels();
 }
 
@@ -49,6 +51,8 @@ double WeatherPlugin::currentPressureHpa() const { return currentValue("pressure
 double WeatherPlugin::currentCloudCover() const { return currentValue("cloudCover", 0.0).toDouble(); }
 double WeatherPlugin::currentVisibilityM() const { return currentValue("visibilityM", 0.0).toDouble(); }
 QVariantMap WeatherPlugin::currentAirQuality() const { return currentValue("airQuality").toMap(); }
+QVariantList WeatherPlugin::locationResults() const { return m_backend.locationResults(); }
+bool WeatherPlugin::searchingLocations() const { return m_backend.searchingLocations(); }
 
 WeatherListModel *WeatherPlugin::hourlyForecast() { return &m_hourly; }
 WeatherListModel *WeatherPlugin::dailyForecast() { return &m_daily; }
@@ -66,6 +70,16 @@ QVariantMap WeatherPlugin::current() const { return m_backend.snapshot().current
 QVariant WeatherPlugin::currentValue(const QString &key, const QVariant &fallback) const
 {
     return m_backend.snapshot().current.value(key, fallback);
+}
+
+void WeatherPlugin::searchLocations(const QString &query)
+{
+    m_backend.searchLocations(query);
+}
+
+void WeatherPlugin::clearLocationSearch()
+{
+    m_backend.clearLocationSearch();
 }
 
 void WeatherPlugin::syncModels()

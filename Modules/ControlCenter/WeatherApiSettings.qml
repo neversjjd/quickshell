@@ -139,6 +139,142 @@ StyledFlickable {
             }
         }
 
+        // 位置：默认靠 IP 定位，走代理时会被带偏到别的国家，所以允许手工指定城市
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: locationContent.implicitHeight + 48
+            radius: Appearance.rounding.large
+            color: Appearance.colors.colSurfaceContainer
+
+            ColumnLayout {
+                id: locationContent
+
+                anchors.fill: parent
+                anchors.margins: 24
+                spacing: 12
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 12
+
+                    Rectangle {
+                        Layout.preferredWidth: 44
+                        Layout.preferredHeight: 44
+                        radius: Appearance.rounding.full
+                        color: Appearance.colors.colPrimaryContainer
+
+                        MaterialSymbol {
+                            anchors.centerIn: parent
+                            text: "location_on"
+                            iconSize: 22
+                            fill: 1
+                            color: Appearance.colors.colOnPrimaryContainer
+                        }
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 2
+
+                        Text {
+                            Layout.fillWidth: true
+                            text: qsTr("位置")
+                            color: Appearance.colors.colOnSurface
+                            font.family: Fonts.ui
+                            font.pixelSize: 16
+                            font.weight: Font.Medium
+                            textFormat: Text.PlainText
+                        }
+
+                        Text {
+                            Layout.fillWidth: true
+                            text: WeatherPlugin.locationName.length > 0
+                                ? WeatherPlugin.locationName
+                                : qsTr("未确定")
+                            color: Appearance.colors.colOnSurfaceVariant
+                            font.family: Fonts.ui
+                            font.pixelSize: 13
+                            textFormat: Text.PlainText
+                            elide: Text.ElideRight
+                        }
+                    }
+
+                    Button {
+                        text: qsTr("使用 IP 定位")
+                        flat: true
+                        enabled: WeatherPlugin.hasManualLocation
+                        focusPolicy: Qt.StrongFocus
+                        Material.foreground: Appearance.colors.colOnSurfaceVariant
+                        onClicked: {
+                            locationSearch.clear()
+                            WeatherPlugin.clearLocationSearch()
+                            WeatherPlugin.clearManualLocation()
+                        }
+                    }
+                }
+
+                MaterialTextField {
+                    id: locationSearch
+
+                    Layout.fillWidth: true
+                    placeholderText: qsTr("搜索城市")
+                    onTextChanged: locationSearchDebounce.restart()
+                }
+
+                Timer {
+                    id: locationSearchDebounce
+
+                    interval: 250
+                    onTriggered: WeatherPlugin.searchLocations(locationSearch.text)
+                }
+
+                Repeater {
+                    model: WeatherPlugin.locationResults
+
+                    delegate: Rectangle {
+                        id: locationResult
+
+                        required property var modelData
+
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 44
+                        radius: Appearance.rounding.normal
+                        color: resultHover.hovered
+                            ? Appearance.colors.colSurfaceContainerHighest
+                            : "transparent"
+
+                        Text {
+                            anchors.left: parent.left
+                            anchors.leftMargin: 12
+                            anchors.right: parent.right
+                            anchors.rightMargin: 12
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: locationResult.modelData.label
+                            color: Appearance.colors.colOnSurface
+                            font.family: Fonts.ui
+                            font.pixelSize: 14
+                            textFormat: Text.PlainText
+                            elide: Text.ElideRight
+                        }
+
+                        HoverHandler { id: resultHover }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: {
+                                WeatherPlugin.setManualLocation(
+                                    locationResult.modelData.latitude,
+                                    locationResult.modelData.longitude,
+                                    locationResult.modelData.name)
+                                locationSearch.clear()
+                                WeatherPlugin.clearLocationSearch()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: serviceContent.implicitHeight + 48

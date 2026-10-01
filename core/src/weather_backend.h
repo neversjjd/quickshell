@@ -19,10 +19,16 @@ class WeatherBackend : public QObject {
     Q_INVOKABLE void refresh();
     Q_INVOKABLE void setManualLocation(double latitude, double longitude, const QString &name);
     Q_INVOKABLE void clearManualLocation();
+    Q_INVOKABLE void searchLocations(const QString &query);
+    Q_INVOKABLE void clearLocationSearch();
+
+    QVariantList locationResults() const { return m_locationResults; }
+    bool searchingLocations() const { return m_searchingLocations; }
 
   signals:
     void snapshotChanged();
     void loadingChanged();
+    void locationSearchChanged();
 
   private:
     OpenMeteoClient m_client;
@@ -33,6 +39,9 @@ class WeatherBackend : public QObject {
     bool m_hasManualLocation = false;
     WeatherLocation m_manualLocation;
     QString m_cachePath;
+    QVariantList m_locationResults;
+    bool m_searchingLocations = false;
+    int m_searchGeneration = 0;
 
     void setLoading(bool loading);
     void startFetch(const WeatherLocation &location);

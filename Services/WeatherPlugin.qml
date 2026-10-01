@@ -35,6 +35,8 @@ QtObject {
     readonly property real currentCloudCover: backend.currentCloudCover
     readonly property real currentVisibilityM: backend.currentVisibilityM
     readonly property var currentAirQuality: backend.currentAirQuality
+    readonly property var locationResults: backend.locationResults
+    readonly property bool searchingLocations: backend.searchingLocations
 
     readonly property var hourlyForecast: backend.hourlyForecast
     readonly property var dailyForecast: backend.dailyForecast
@@ -42,16 +44,21 @@ QtObject {
     readonly property var minutelyForecast: backend.minutelyForecast
 
     signal dataChanged()
+    signal locationSearchChanged()
 
     function refresh() { return backend.refresh() }
     function setManualLocation(latitudeValue, longitudeValue, name) {
         return backend.setManualLocation(latitudeValue, longitudeValue, name)
     }
     function clearManualLocation() { return backend.clearManualLocation() }
+    function searchLocations(query) { return backend.searchLocations(query) }
+    function clearLocationSearch() { return backend.clearLocationSearch() }
     function current() { return backend.current() }
 
     readonly property Connections backendConnections: Connections {
         target: root.backend
         function onDataChanged() { root.dataChanged() }
+        function onLocationSearchChanged() { root.locationSearchChanged() }
     }
+
 }

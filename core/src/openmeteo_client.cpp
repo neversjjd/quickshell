@@ -1,5 +1,6 @@
 #include "openmeteo_client.h"
 
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QNetworkReply>
 #include <QNetworkRequest>
@@ -27,6 +28,46 @@ void OpenMeteoClient::requestIpLocation(LocationCallback callback)
                     location.name = "Unknown";
                 callback(location.latitude != 0.0 || location.longitude != 0.0, location, {});
             });
+}
+
+void OpenMeteoClient::requestLocationSearch(const QString &query, LocationsCallback callback)
+{
+    const QString trimmed = query.trimmed();
+    if (trimmed.isEmpty()) {
+        callback(false, {}, {});
+        return;
+    }
+
+    QUrl url("https://geocoding-api.open-meteo.com/v1/search");
+    QUrlQuery params;
+    params.addQueryItem("name", trimmed);
+    params.addQueryItem("count", "8");
+    params.addQueryItem("language", "zh");
+    params.addQueryItem("format", "json");
+    url.setQuery(params);
+
+    getJson(url, [callback](bool ok, const QJsonObject &json, const QString &error) {
+        if (!ok) {
+            callback(false, {}, error);
+            return;
+        }
+
+        QList<WeatherLocation> results;
+        const QJsonArray array = json.value("results").toArray();
+        for (const QJsonValue &value : array) {
+            const QJsonObject object = value.toObject();
+            WeatherLocation location;
+            location.latitude = object.value("latitude").toDouble();
+            location.longitude = object.value("longitude").toDouble();
+            location.name = object.value("name").toString();
+            location.region = object.value("admin1").toString();
+            location.country = object.value("country").toString();
+            if (location.name.isEmpty())
+                continue;
+            results.append(location);
+        }
+        callback(true, results, {});
+    });
 }
 
 void OpenMeteoClient::requestForecast(double latitude, double longitude, JsonCallback callback)

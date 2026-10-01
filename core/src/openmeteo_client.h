@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QJsonObject>
+#include <QList>
 #include <QNetworkAccessManager>
 #include <QObject>
 #include <functional>
@@ -9,6 +10,8 @@ struct WeatherLocation {
     double latitude = 0.0;
     double longitude = 0.0;
     QString name;
+    QString region;
+    QString country;
 };
 
 class OpenMeteoClient : public QObject {
@@ -18,9 +21,12 @@ class OpenMeteoClient : public QObject {
     explicit OpenMeteoClient(QObject *parent = nullptr);
 
     using LocationCallback = std::function<void(bool, const WeatherLocation &, const QString &)>;
+    using LocationsCallback =
+        std::function<void(bool, const QList<WeatherLocation> &, const QString &)>;
     using JsonCallback = std::function<void(bool, const QJsonObject &, const QString &)>;
 
     void requestIpLocation(LocationCallback callback);
+    void requestLocationSearch(const QString &query, LocationsCallback callback);
     void requestForecast(double latitude, double longitude, JsonCallback callback);
     void requestAirQuality(double latitude, double longitude, JsonCallback callback);
 

@@ -37,6 +37,8 @@ class WeatherPlugin : public QObject {
     Q_PROPERTY(double currentCloudCover READ currentCloudCover NOTIFY dataChanged)
     Q_PROPERTY(double currentVisibilityM READ currentVisibilityM NOTIFY dataChanged)
     Q_PROPERTY(QVariantMap currentAirQuality READ currentAirQuality NOTIFY dataChanged)
+    Q_PROPERTY(QVariantList locationResults READ locationResults NOTIFY locationSearchChanged)
+    Q_PROPERTY(bool searchingLocations READ searchingLocations NOTIFY locationSearchChanged)
 
     Q_PROPERTY(WeatherListModel *hourlyForecast READ hourlyForecast CONSTANT)
     Q_PROPERTY(WeatherListModel *dailyForecast READ dailyForecast CONSTANT)
@@ -72,6 +74,8 @@ class WeatherPlugin : public QObject {
     double currentCloudCover() const;
     double currentVisibilityM() const;
     QVariantMap currentAirQuality() const;
+    QVariantList locationResults() const;
+    bool searchingLocations() const;
 
     WeatherListModel *hourlyForecast();
     WeatherListModel *dailyForecast();
@@ -81,11 +85,14 @@ class WeatherPlugin : public QObject {
     Q_INVOKABLE void refresh();
     Q_INVOKABLE void setManualLocation(double latitude, double longitude, const QString &name);
     Q_INVOKABLE void clearManualLocation();
+    Q_INVOKABLE void searchLocations(const QString &query);
+    Q_INVOKABLE void clearLocationSearch();
     Q_INVOKABLE QVariantMap current() const;
 
   signals:
     void dataChanged();
     void loadingChanged();
+    void locationSearchChanged();
 
   private:
     WeatherBackend m_backend;

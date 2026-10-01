@@ -103,6 +103,49 @@ void WeatherBackend::clearManualLocation()
     refresh();
 }
 
+void WeatherBackend::searchLocations(const QString &query)
+{
+    const int generation = ++m_searchGeneration;
+    m_searchingLocations = true;
+    emit locationSearchChanged();
+
+    m_client.requestLocationSearch(
+        query, [this, generation](bool ok, const QList<WeatherLocation> &results, const QString &) {
+            if (generation != m_searchGeneration)
+                return;
+
+            m_searchingLocations = false;
+            QVariantList list;
+            if (ok) {
+                for (const WeatherLocation &location : results) {
+                    QString label = location.name;
+                    if (!location.region.isEmpty())
+                        label += QStringLiteral(", ") + location.region;
+                    if (!location.country.isEmpty())
+                        label += QStringLiteral(", ") + location.country;
+
+                    QVariantMap item;
+                    item["name"] = location.name;
+                    item["label"] = label;
+                    item["latitude"] = location.latitude;
+                    item["longitude"] = location.longitude;
+                    list.append(item);
+                }
+            }
+            m_locationResults = list;
+            emit locationSearchChanged();
+        });
+}
+
+void WeatherBackend::clearLocationSearch()
+{
+    ++m_searchGeneration;
+    m_searchingLocations = false;
+    if (!m_locationResults.isEmpty())
+        m_locationResults.clear();
+    emit locationSearchChanged();
+}
+
 void WeatherBackend::setLoading(bool loading)
 {
     if (m_loading == loading)
